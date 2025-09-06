@@ -1,10 +1,13 @@
+import { IEvents } from "../components/base/events";
+
 export interface IProduct {  //Товар
   id: string;
   description: string;
-  images: string;
+  image: string;
   title: string;
   category: string;
   price: number;
+  index?: number;
 }
 
 export interface IUser {  // Пользователь
@@ -12,22 +15,44 @@ export interface IUser {  // Пользователь
   address: string;
   email: string;
   phone: string;
+  events?: IEvents;
+  total?: number | null;
+  items?: string[]
 }
 
-export interface IBasket {  // Корзина
-  items: IProduct[];
-  total: number | null;
+
+export type IBasket = Pick<IUser, 'items' | 'total' | 'events'>;
+
+export type IFormAddress = Pick<IUser, 'payment' | 'address'>;  // Попап оплата/адрес
+
+export type IFormContacts = Pick<IUser, 'email' | 'phone'>;  // Попап почта/телефон
+
+export type IFormSuccess = Pick<IBasket, 'total'>;  // Попап итоговый
+
+export interface IAppState {  // Интерфейс связанный с валидацией и ошибками (использую в AppData)
+	validation?: boolean;
+	errors?: string[];
 }
 
-export interface IProductData {  // Отображение всех товаров
-	items: IProduct[];
-  preview: string | null;
- }
+export interface IPage {  // Интерфейс для отображения каталога
+	counter: number;
+	catalog: HTMLElement[];
+	locked: boolean;
+}
 
+export interface IOrderResponse { // Интерфейс ответа сервера при успешном заказе
+  id: string;
+  total: number;
+}
 
+export interface ICatalogChanged {  // изменение каталога
+  catalog: IProduct[];
+}
 
-export type FormAddress = Pick<IUser, 'payment' | 'address'>;  // Попап оплата/адрес
+export interface IAppApi { // Интерфейс методов для работы с апи
+  getCatalog(): Promise<IProduct[]>;  // гет запрос на каталог
+  getProduct(id: string): Promise<IProduct>;  // гет запрос на товар
+  createOrder(order: IUser): Promise<IOrderResponse>;  // это пост запрос на создание заказа(!)
+}
 
-export type FormContacts = Pick<IUser, 'email' | 'phone'>;  // Попап почта/телефон
-
-export type FormSuccess = Pick<IBasket, 'total'>;  // Попап итоговый
+export type FormErrors = Partial<Record<keyof IUser, string>>;  
