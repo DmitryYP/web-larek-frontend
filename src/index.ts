@@ -36,6 +36,11 @@ const modal = new Modal(modalContainer, events);
 const basket = new Basket(cloneTemplate(basketTemplate), events);
 const order = new Order(cloneTemplate(orderTemplate), events);
 const contacts = new Contacts(cloneTemplate(contactsTemplate), events);
+const success = new Success(cloneTemplate(successTemplate), {  // Один раз призагрузке приложения
+  onClick: () => {
+    modal.close();
+  },
+});
 
 
 // ФУНКЦИИ
@@ -84,8 +89,6 @@ events.on('item:select', async (item: IProduct) => {  // Это событие �
         if (!card.isInBasket) { // проверяем наличие товара в корзине
           card.isInBasket = true; // меняем состояние карточки
           appState.toggleOrderItem(product.id, true); // меняем состояние корзины
-          page.counter = appState.user.items.length; // это счётчик товаров
-          events.emit('basket:changed', product); // срабатывает событие изменения корзины
         } else {
           events.emit('basket:open', product);  // если товар уже в корзине то срабатывает событие открытия корзины, которое описано чуть ниже
         }
@@ -137,7 +140,6 @@ events.on('basket:changed', () => {  // Событие ИЗМЕНЕНИЯ кор
 
 
 events.on('order:open', () => {  // инвент открытия формы заказа с адресом и типом оплаты
-	order.payment = appState.user.payment; // обновляем способ оплаты
 	appState.validateAddress();  // вызываем метод связанный с валидацей конкретной формы
 	modal.render({  // и рендерим отрисовку модального окна со всеми данными
 		content: order.render({
@@ -217,15 +219,9 @@ events.on('contacts:submit', () => {  // ивент после нажатия к
 		appState.getTotal();  // получаем итоговую сумму заказа
 		api
 			.createOrder(appState.user)  // создаём заказ
-			.then((result) => {
-				const success = new Success(cloneTemplate(successTemplate), {  // отобраежем окно с успешным заказом
-					onClick: () => {  // после нажатия кнопки на оконе с подтверждением мы...
-						modal.close();  // ...закрываем модальное окно...
-						appState.clearBasket();  // ...очищаем корзину...
-						events.emit('basket:changed');  // ...ивент изменения корзины
-					},
-				});
-
+			.then((result) => {  // очищаем корзину сразу после успешного заказа
+        appState.clearBasket();
+        events.emit('basket:changed');
 				modal.render({  // рендерим модальное окно с итоговой суммой заказа
 					content: success.render({
 						total: result.total,

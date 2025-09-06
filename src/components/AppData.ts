@@ -31,7 +31,7 @@ export class AppState extends Model<IAppState> {
 	}
 
 	clearBasket() {
-		this.user.items.forEach((id) => this.toggleOrderItem(id, false));
+		this.user.items = [];
 		this.clearFields();
 		this.emitChanges('basket:changed', { order: this.user });
 	}
